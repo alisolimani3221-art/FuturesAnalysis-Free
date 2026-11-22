@@ -43,7 +43,7 @@ fun FuturesAnalysisScreen() {
     val context = LocalContext.current
 
     MaterialTheme {
-        Scaffold(topBar = { TopAppBar(title = { Text("Futures Analysis 1.47") }) }) { padding ->
+        Scaffold(topBar = { TopAppBar(title = { Text("Futures Analysis 1.48") }) }) { padding ->
             Column(
                 modifier = Modifier.padding(padding).fillMaxSize()
                     .verticalScroll(rememberScrollState()).padding(20.dp),
@@ -64,20 +64,21 @@ fun FuturesAnalysisScreen() {
                             var result: String? = null
                             var error: String? = null
                             try {
-                                val connection = (URL("https://api.binance.com/api/v3/ticker/price?symbol=$normalized")
+                                val connection = (URL("https://data-api.binance.vision/api/v3/ticker/price?symbol=$normalized")
                                     .openConnection() as HttpURLConnection).apply {
                                     requestMethod = "GET"
-                                    connectTimeout = 10000
-                                    readTimeout = 10000
+                                    connectTimeout = 15000
+                                    readTimeout = 15000
+                                    setRequestProperty("Accept", "application/json")
                                 }
                                 try {
                                     val body = (if (connection.responseCode in 200..299) connection.inputStream else connection.errorStream)
                                         .bufferedReader().use { it.readText() }
                                     if (connection.responseCode in 200..299) result = JSONObject(body).getString("price")
-                                    else error = "نماد پیدا نشد یا سرویس پاسخ مناسبی نداد."
+                                    else error = "پاسخ سرور: HTTP ${connection.responseCode}؛ نماد را بررسی کنید یا بعداً دوباره تلاش کنید."
                                 } finally { connection.disconnect() }
-                            } catch (_: Exception) {
-                                error = "دریافت اطلاعات ناموفق بود؛ اتصال اینترنت را بررسی کنید."
+                            } catch (e: Exception) {
+                                error = "خطای اتصال: ${e.localizedMessage ?: "اینترنت یا دسترسی به سرویس عمومی در دسترس نیست."}"
                             }
                             mainHandler.post {
                                 loading = false
